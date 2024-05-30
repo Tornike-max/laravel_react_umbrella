@@ -15,15 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description');
-            $table->decimal('price', 8, 2);
+            $table->decimal('price', 10, 2);
             $table->string('image')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('category_product', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_category_id')->constrained()->onDelete('cascade');
+            $table->json('categories')->nullable();
             $table->timestamps();
         });
     }

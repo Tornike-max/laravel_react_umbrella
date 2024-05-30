@@ -5,59 +5,82 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('categories')->paginate(10);
+        $query = Product::query();
+
+        if ($request->has('categories')) {
+            $categories = explode(',', $request->input('categories'));
+            foreach ($categories as $category) {
+                $query->orWhereJsonContains('categories', $category);
+            }
+        }
+
+        $products = $query->paginate(10);
+
         return response()->json($products);
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'required|string|max:1000',
             'price' => 'required|numeric',
-            'image' => 'nullable|image',
             'categories' => 'required|array',
-            'categories.*' => 'exists:product_categories,id',
+            'image' => 'required|image',
         ]);
 
-        $product = Product::create($validated);
-        $product->categories()->attach($validated['categories']);
+        $path = $request->file('image')->store('images', 'public');
 
-        return response()->json($product, 201);
-    }
-
-    public function show(Product $product)
-    {
-        return response()->json($product->load('categories'));
-    }
-
-    public function update(Request $request, Product $product)
-    {
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string',
-            'price' => 'sometimes|required|numeric',
-            'image' => 'nullable|image',
-            'categories' => 'sometimes|required|array',
-            'categories.*' => 'exists:product_categories,id',
+        $url = 'http://localhost:8000' . Storage::url($path);
+        $product = new Product([
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'categories' => json_encode($request->categories),
+            'image' => $url,
         ]);
 
-        $product->update($validated);
-        if (isset($validated['categories'])) {
-            $product->categories()->sync($validated['categories']);
-        }
+        $product->save();
+
+        return response()->json(['message' => 'Product created successfully.'], Response::HTTP_CREATED);
+    }
+
+
+    public function show(string $id)
+    {
+        $product = Product::findOrFail($id);
 
         return response()->json($product);
     }
 
-    public function destroy(Product $product)
+
+    public function update(Request $request, Product $product)
     {
+        $request->validate([
+            'name' => 'required',
+            'description' => 'required',
+            'price' => 'required|numeric',
+        ]);
+
+        $product->update($request->all());
+
+        return redirect()->route('products.index')
+            ->with('success', 'Product updated successfully');
+    }
+
+
+    public function destroy($id)
+    {
+        $product = Product::findOrFail($id);
         $product->delete();
-        return response()->noContent();
+
+        return response()->json(['message' => 'Product deleted successfully']);
     }
 }

@@ -3,45 +3,61 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProductCategory;
+use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class ProductCategoryController extends Controller
 {
     public function index()
     {
-        $categories = ProductCategory::all();
-        return response()->json($categories);
+        $categories = Category::all();
+        return view('categories.index', compact('categories'));
+    }
+
+    public function create()
+    {
+        return view('categories.create');
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
+        $request->validate([
+            'name' => 'required',
         ]);
 
-        $category = ProductCategory::create($validated);
-        return response()->json($category, 201);
+        Category::create($request->all());
+
+        return response()->json(['message' => 'Category created successfully.'], Response::HTTP_CREATED);
     }
 
-    public function show(ProductCategory $category)
+    public function show(Category $category)
     {
-        return response()->json($category);
+        return view('categories.show', compact('category'));
     }
 
-    public function update(Request $request, ProductCategory $category)
+    public function edit(Category $category)
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
+        return view('categories.edit', compact('category'));
+    }
+
+    public function update(Request $request, Category $category)
+    {
+        $request->validate([
+            'name' => 'required',
         ]);
 
-        $category->update($validated);
-        return response()->json($category);
+        $category->update($request->all());
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Category updated successfully');
     }
 
-    public function destroy(ProductCategory $category)
+    public function destroy(Category $category)
     {
         $category->delete();
-        return response()->noContent();
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Category deleted successfully');
     }
 }
