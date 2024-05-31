@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { CategoryType, ProductInterfaceObj } from "../types/types";
 
@@ -45,8 +46,10 @@ export const createCategoryApi = async (data: CategoryType) => {
     }
 };
 
-export const getProductsData = async (params: string[]) => {
+export const getProductsData = async (categories: any) => {
     try {
+        const params =
+            categories.length > 0 ? { categories: categories.join(",") } : {};
         const response = await axios.get(
             `${import.meta.env.VITE_API}/products`,
             { params }

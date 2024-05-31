@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { getProductsData } from "../api/api";
 
-export const useGetProducts = (params: string[]) => {
+export const useGetProducts = (categories) => {
     const { data: productsData, isPending } = useQuery({
-        queryKey: ["products", `filterBy=${params.join(", ")}`],
-        queryFn: () => getProductsData(params),
+        queryKey: ["products", `filterBy=${categories}`],
+        queryFn: () => getProductsData(categories),
     });
 
     return { productsData, isPending };

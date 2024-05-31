@@ -6,8 +6,8 @@ import { useSearchParams } from "react-router-dom";
 
 const ProductList = () => {
     const [searchParams] = useSearchParams();
-    const params = searchParams.get("categories")?.split(",") || [];
-    const { productsData, isPending } = useGetProducts(params);
+    const categories = searchParams.getAll("categories");
+    const { productsData, isPending } = useGetProducts(categories);
 
     if (isPending)
         return <p className="text-center text-gray-500">Loading...</p>;

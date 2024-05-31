@@ -14,10 +14,10 @@ class ProductController extends Controller
     {
         $query = Product::query();
 
-        if ($request->has('categories')) {
+        if ($request->has('categories') && $request->input('categories') !== '') {
             $categories = explode(',', $request->input('categories'));
             foreach ($categories as $category) {
-                $query->orWhereJsonContains('categories', $category);
+                $query->whereJsonContains('categories', $category);
             }
         }
 
